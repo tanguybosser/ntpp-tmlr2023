@@ -1,0 +1,128 @@
+#!/bin/bash
+
+#SBATCH --job-name=examples
+#SBATCH --output=examples.out
+
+#SBATCH --gres=gpu:1
+#SBATCH --cpus-per-task=4
+#SBATCH --mem=10G
+
+: "
+##GRU + EC + CONCAT
+
+python3 -u scripts/train.py --dataset 'lastfm_filtered' --load-from-dir 'data' \
+--save-results-dir 'results' --save-check-dir 'checkpoints' \
+--eval-metrics True --include-poisson False --patience 100 --batch-size 8 --split 0 \
+--encoder 'gru' --encoder-encoding 'concatenate' --encoder-emb-dim 8 \
+--encoder-units-rnn 32 --encoder-layers-rnn 1 \
+--encoder-units-mlp 16 --encoder-activation-mlp 'relu' \
+--decoder 'conditional-poisson' --decoder-emb-dim 8 \
+--decoder-units-mlp 16 --decoder-units-mlp 16 --decoder-activation-mlp 'relu' --decoder-activation-final-mlp 'parametric_softplus' \
+--train-epochs 2
+
+
+##GRU + LNM + TEMWL
+
+python3 -u scripts/train.py --dataset 'lastfm_filtered' --load-from-dir 'data' \
+--save-results-dir 'results' --save-check-dir 'checkpoints' \
+--eval-metrics True --include-poisson False --patience 100 --batch-size 8 --split 0 \
+--encoder 'gru' --encoder-encoding 'temporal_with_labels' --encoder-emb-dim 8 \
+--encoder-units-rnn 32 --encoder-layers-rnn 1 \
+--encoder-units-mlp 16 --encoder-activation-mlp 'relu' \
+--decoder 'log-normal-mixture' \
+--decoder-units-mlp 16 --decoder-units-mlp 16 \
+--decoder-n-mixture 32 \
+--train-epochs 1
+
+
+##SA + MLP/MC + LE
+
+python3 -u scripts/train.py --dataset 'lastfm_filtered' --load-from-dir 'data' \
+--save-results-dir 'results' --save-check-dir 'checkpoints' \
+--eval-metrics True --include-poisson True --patience 100 --batch-size 8 --split 0 \
+--encoder 'selfattention' --encoder-encoding 'learnable' --encoder-emb-dim 8 \
+--encoder-units-rnn 32 --encoder-layers-rnn 1 --encoder-n-heads 1 --encoder-attn-activation 'softmax' \
+--encoder-units-mlp 16 --encoder-activation-mlp 'relu' \
+--decoder 'mlp-mc' --decoder-encoding 'learnable' --decoder-emb-dim 8 \
+--decoder-units-mlp 16 --decoder-units-mlp 16 --decoder-activation-mlp 'relu' --decoder-activation-final-mlp 'parametric_softplus' \
+--decoder-mc-prop-est 10 \
+--train-epochs 1
+
+##SA + MLP/CM + LEWL
+
+python3 -u scripts/train.py --dataset 'lastfm_filtered' --load-from-dir 'data' \
+--save-results-dir 'results' --save-check-dir 'checkpoints' \
+--eval-metrics True --include-poisson True --patience 100 --batch-size 8 --split 0 \
+--encoder 'selfattention' --encoder-encoding 'learnable_with_labels' --encoder-emb-dim 8 --encoder-embedding-constraint 'nonneg' \
+--encoder-units-rnn 32 --encoder-layers-rnn 1 --encoder-n-heads 1 --encoder-attn-activation 'sigmoid' --encoder-constraint-rnn 'nonneg' \
+--encoder-units-mlp 16 --encoder-activation-mlp 'relu' --encoder-constraint-mlp 'nonneg' \
+--decoder 'mlp-cm' --decoder-encoding 'learnable' --decoder-emb-dim 8 --decoder-embedding-constraint 'nonneg' \
+--decoder-units-mlp 16 --decoder-units-mlp 16 --decoder-activation-mlp 'gumbel_softplus' --decoder-activation-final-mlp 'gumbel_softplus' \
+--decoder-constraint-mlp 'nonneg' \
+--train-epochs 1
+
+##GRU + RMTPP + TO
+
+python3 -u scripts/train.py --dataset 'lastfm_filtered' --load-from-dir 'data' \
+--save-results-dir 'results' --save-check-dir 'checkpoints' \
+--eval-metrics True --include-poisson False --patience 100 --batch-size 8 --split 0 \
+--encoder 'gru' --encoder-encoding 'times_only' --encoder-emb-dim 1 \
+--encoder-units-rnn 32 --encoder-layers-rnn 1 \
+--encoder-units-mlp 16 --encoder-activation-mlp 'relu' \
+--decoder 'rmtpp' \
+--decoder-units-mlp 16 \
+--train-epochs 1
+
+
+##SA + SA/CM + LEWL
+
+python3 -u scripts/train.py --dataset 'lastfm_filtered' --load-from-dir 'data' \
+--save-results-dir 'results' --save-check-dir 'checkpoints' \
+--eval-metrics True --include-poisson True --patience 100 --batch-size 8 --split 0 \
+--encoder 'selfattention' --encoder-encoding 'learnable_with_labels' --encoder-emb-dim 8 --encoder-embedding-constraint 'nonneg' \
+--encoder-units-rnn 32 --encoder-layers-rnn 1 --encoder-n-heads 1 --encoder-attn-activation 'sigmoid' --encoder-constraint-rnn 'nonneg' \
+--encoder-units-mlp 16 --encoder-activation-mlp 'relu' --encoder-constraint-mlp 'nonneg' \
+--decoder 'selfattention-cm' --decoder-encoding 'learnable' --decoder-emb-dim 8 --decoder-embedding-constraint 'nonneg' \
+--decoder-units-mlp 16 --decoder-activation-mlp 'gumbel_softplus' \
+--decoder-activation-final-mlp 'gumbel_softplus' --decoder-constraint-mlp 'nonneg' \
+--decoder-attn-activation 'sigmoid' --decoder-activation-rnn 'gumbel_softplus' --decoder-layers-rnn 1 \
+--decoder-units-rnn 32 --decoder-n-heads 1 --decoder-constraint-rnn 'nonneg' \
+--train-epochs 1
+
+
+##GRU + SA/MC + TEM
+
+python3 -u scripts/train.py --dataset 'lastfm_filtered' --load-from-dir 'data' \
+--save-results-dir 'results' --save-check-dir 'checkpoints' \
+--eval-metrics True --include-poisson True --patience 100 --batch-size 2 --split 0 \
+--encoder 'gru' --encoder-encoding 'temporal' --encoder-emb-dim 8 \
+--encoder-units-rnn 32 --encoder-layers-rnn 1 \
+--encoder-units-mlp 16 --encoder-activation-mlp 'relu' \
+--decoder 'selfattention-mc' --decoder-encoding 'temporal' --decoder-emb-dim 8 \
+--decoder-units-mlp 16 --decoder-activation-mlp 'relu' \
+--decoder-activation-final-mlp 'parametric_softplus' \
+--decoder-attn-activation 'softmax' --decoder-activation-rnn 'relu' --decoder-layers-rnn 1 \
+--decoder-units-rnn 32 --decoder-n-heads 1 \
+--decoder-mc-prop-est 10 \
+--train-epochs 1
+
+#HAWKES
+
+python3 -u scripts/train.py --dataset 'lastfm_filtered' --load-from-dir 'data' \
+--save-results-dir 'results' --save-check-dir 'checkpoints' \
+--eval-metrics True --include-poisson False --patience 100 --batch-size 8 --split 0 \
+--encoder 'stub' --decoder 'hawkes' \
+--train-epochs 1
+"
+
+#SHOW MODELED INTENSITY
+
+python3 -u scripts/show_modeled_intensity.py \
+--load-from-dir 'data' \
+--dataset 'lastfm_filtered' \
+--model-dir 'checkpoints' \
+--model 'lastfm_filtered_gru_log-normal-mixture_temporal_with_labels_split0' \
+--min-event-per-seq 31 \
+--max-event-per-seq 100 --ground-intensity True --x-lims 1 2 \
+--save-fig-dir 'figures/intensities'
+
