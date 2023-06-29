@@ -7,8 +7,11 @@ The base code is heavily built on the implementation of ["Neural Temporal Point 
 ## Contact
 + Tanguy Bosser [tanguy.bosser@umons.ac.be](mailto:tanguy.bosser@umons.ac.be)
 
-## Development
-### Installation
+## About
+
+This repository allows to train and evaluate various neural TPP models following an encoder/decoder framework. The implementations of the different encoders can be found within the ```tpp/models/encoders``` folder, while the decoders are located in ```tpp/models/encoders```. For a specified combination of encoder and decoder, the computation of the negative log-likelihood and related quantities (density, intensity, cdf...) is carried out in ```tpp/models/enc_dec.py```. The train, validation and test metrics, and model checkpoints are finally stored within a directory specified by the user. See the 'Usage' section below for more details.   
+
+## Installation
 
 In order to use this repository, you need to create an environment that contains [tick](https://github.com/X-DataInitiative/tick). Prior to installing tick, you'll need to have the [Swig](https://swig.org/svn.html) library installed on your device. Refer to the [documentation](https://www.swig.org/Doc4.0/SWIGDocumentation.html#Preface_installation) (in section 1.12) for a step-by-step installation. Once Swig is successfully installed, run the following command to setup the environment:
 
@@ -56,7 +59,7 @@ Please cite our paper if you use this code in your own work:
     title={On the Predictive accuracy of Neural Temporal Point Process Models for Continuous-time Event Data},
     author={Tanguy Bosser and Souhaib Ben Taieb},
     year={2023},
-    journal={Transaction of Machine Learning Research (TMLR)}
+    journal={Transactions of Machine Learning Research (TMLR)}
 }
 ```
 
