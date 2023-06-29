@@ -1,4 +1,4 @@
-name: lses_tpp_env
+name: ntpp_env
 channels:
   - defaults
   - pytorch
